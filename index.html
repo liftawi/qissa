@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QISSA | قصة - Cinematic Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme-accent: #d4af37;
+            --theme-glow: rgba(212, 175, 55, 0.2);
+            --theme-text-shadow: rgba(0, 0, 0, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Tajawal', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .video-engine {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: #000;
+        }
+
+        .video-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; 
+            
+            /* الحالة الافتراضية (خفي) */
+            opacity: 0; 
+            transform: scale(1.1) translateZ(0); /* translateZ لتسريع كرت الشاشة */
+            
+            /* تلاشي نقي بدون ضبابية لراحة الأجهزة الضعيفة */
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            will-change: opacity; /* إخبار المتصفح بتجهيز كرت الشاشة للتلاشي */
+        }
+
+        /* الحالة النشطة (مرئي) */
+        .video-layer.active {
+            opacity: 1;
+            animation: slowZoom 10s ease-in-out infinite alternate; /* حركة تكبير بطيئة جداً */
+        }
+
+        @keyframes slowZoom {
+            from { transform: scale(1.1); }
+            to { transform: scale(1.2); }
+        }
+
+        .ui-container {
+            position: relative; z-index: 10; height: 100vh;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 4vh 5vw;
+        }
+
+        .brand-header { text-align: center; }
+        .brand-name { font-family: 'Cinzel', serif; font-size: 2rem; letter-spacing: 0.5em; text-shadow: 0 4px 20px var(--theme-text-shadow); }
+        .brand-sub { font-size: 0.9rem; opacity: 0.7; letter-spacing: 0.2em; }
+
+        .content-block {
+            max-width: 600px; margin-bottom: 15vh;
+            /* منحنى فاخر للنصوص */
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .content-block.changing {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .perfume-title {
+            font-family: 'Cinzel', serif; font-size: 4.5rem; font-weight: 700;
+            line-height: 1; margin-bottom: 1rem; text-transform: uppercase;
+            text-shadow: 0 10px 40px var(--theme-text-shadow);
+            color: var(--theme-accent); transition: color 1.2s ease;
+        }
+
+        .perfume-desc {
+            font-size: 1.2rem; font-weight: 300; max-width: 400px;
+            margin-bottom: 2rem; line-height: 1.6;
+            text-shadow: 0 2px 10px var(--theme-text-shadow);
+        }
+
+        .action-row { display: flex; align-items: center; gap: 2rem; }
+        .perfume-price { font-size: 1.5rem; font-weight: 700; text-shadow: 0 2px 10px var(--theme-text-shadow); }
+
+        .buy-btn {
+            background: var(--theme-accent); color: #000; border: none;
+            padding: 1rem 2.5rem; font-family: 'Cinzel', serif; font-weight: 700;
+            letter-spacing: 0.1em; cursor: pointer; border-radius: 2px;
+            box-shadow: 0 0 30px var(--theme-glow);
+            transition: all 0.3s ease, background 1.2s ease, box-shadow 1.2s ease;
+        }
+
+        .buy-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 40px var(--theme-glow); }
+
+        .auto-cycle-indicator {
+            position: absolute; bottom: 12vh; left: 0; width: 100%;
+            height: 2px; background: rgba(255,255,255,0.1);
+        }
+
+        .cycle-progress {
+            height: 100%; width: 0%; background: var(--theme-accent);
+            box-shadow: 0 0 15px var(--theme-glow); transition: background 1.2s ease;
+        }
+
+        .perfume-selector {
+            display: flex; justify-content: center; gap: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2vh;
+        }
+
+        .perfume-btn {
+            background: transparent; border: none; color: rgba(255,255,255,0.5);
+            font-family: 'Cinzel', serif; font-size: 0.9rem; letter-spacing: 0.2em;
+            cursor: pointer; padding: 1rem; position: relative; transition: color 0.3s ease;
+        }
+
+        .perfume-btn.active { color: var(--theme-accent); }
+        .perfume-btn.active::after {
+            content: ''; position: absolute; bottom: 0; left: 50%;
+            transform: translateX(-50%); width: 20px; height: 2px;
+            background: var(--theme-accent); box-shadow: 0 0 10px var(--theme-glow);
+        }
+
+        @media (max-width: 768px) {
+            .perfume-title { font-size: 3rem; }
+            .content-block { margin-bottom: 20vh; }
+            .brand-name { font-size: 1.5rem; }
+            .perfume-desc { font-size: 1rem; }
+            .action-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="video-engine">
+        <video id="video-layer-1" class="video-layer active" muted loop playsinline preload="auto" src="oud.mp4"></video>
+        <video id="video-layer-2" class="video-layer" muted loop playsinline preload="auto"></video>
+    </div>
+
+    <main class="ui-container">
+        <header class="brand-header">
+            <h1 class="brand-name">QISSA</h1>
+            <span class="brand-sub">قصة</span>
+        </header>
+
+        <section class="content-block" id="content-block">
+            <h2 class="perfume-title" id="perfume-title">OUD</h2>
+            <p class="perfume-desc" id="perfume-desc">Deep dark luxury. A timeless story woven from smoke and gold.</p>
+            <div class="action-row">
+                <span class="perfume-price" id="perfume-price">$240</span>
+                <button class="buy-btn" id="buy-btn">BUY NOW</button>
+            </div>
+        </section>
+
+        <div class="auto-cycle-indicator">
+            <div class="cycle-progress" id="cycle-progress"></div>
+        </div>
+
+        <nav class="perfume-selector" id="perfume-selector">
+            <button class="perfume-btn active" data-id="oud">OUD</button>
+            <button class="perfume-btn" data-id="strawberry">STRAWBERRY</button>
+            <button class="perfume-btn" data-id="rose">ROSE</button>
+        </nav>
+    </main>
+
+    <script>
+        const QissaEngine = {
+            worlds: {
+                oud: {
+                    title: "OUD",
+                    desc: "Deep dark luxury. A timeless story woven from smoke and gold.",
+                    price: "$240",
+                    video: "oud.mp4",
+                    duration: 4000, // 4 ثوانٍ
+                    theme: { accent: "#d4af37", glow: "rgba(212, 175, 55, 0.3)" }
+                },
+                strawberry: {
+                    title: "STRAWBERRY",
+                    desc: "Fresh energetic luxury. A burst of vivid emotional light.",
+                    price: "$180",
+                    video: "strawberry.mp4",
+                    duration: 3000, // 3 ثوانٍ
+                    theme: { accent: "#ff4b5c", glow: "rgba(255, 75, 92, 0.4)" }
+                },
+                rose: {
+                    title: "ROSE",
+                    desc: "Romantic elegant luxury. Petals drifting through calm winds.",
+                    price: "$210",
+                    video: "rose.mp4",
+                    duration: 2100, // ✅ 2.1 ثانية
+                    theme: { accent: "#ff66c4", glow: "rgba(255, 102, 196, 0.3)" }
+                }
+            },
+
+            worldKeys: ['oud', 'strawberry', 'rose'],
+            currentIndex: 0,
+            activeLayer: 1,
+            cycleTimeout: null,
+
+            init() {
+                this.switchWorld('oud', true);
+                
+                document.querySelectorAll('.perfume-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const worldId = e.target.getAttribute('data-id');
+                        this.switchWorld(worldId);
+                        this.resetAutoCycle();
+                    });
+                });
+
+                document.body.addEventListener('click', () => {
+                    const activeVideo = document.querySelector('.video-layer.active');
+                    if (activeVideo && activeVideo.paused) {
+                        activeVideo.muted = true;
+                        activeVideo.volume = 0;
+                        activeVideo.play();
+                    }
+                });
+            },
+
+            switchWorld(worldId, isInitial = false) {
+                const world = this.worlds[worldId];
+                if (!world) return;
+
+                this.updateTheme(world.theme);
+                this.updateUI(world);
+                this.updateVideo(world.video, isInitial);
+
+                document.querySelectorAll('.perfume-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-id') === worldId);
+                });
+
+                this.currentIndex = this.worldKeys.indexOf(worldId);
+            },
+
+            updateTheme(theme) {
+                const root = document.documentElement;
+                root.style.setProperty('--theme-accent', theme.accent);
+                root.style.setProperty('--theme-glow', theme.glow);
+            },
+
+            updateUI(world) {
+                const contentBlock = document.getElementById('content-block');
+                
+                // تلاشي النص القديم
+                contentBlock.classList.add('changing');
+
+                // تبديل النص في منتصف فترة التلاشي (0.6s / 2 = 300ms)
+                setTimeout(() => {
+                    document.getElementById('perfume-title').innerText = world.title;
+                    document.getElementById('perfume-desc').innerText = world.desc;
+                    document.getElementById('perfume-price').innerText = world.price;
+                }, 300);
+
+                // إعادة ظهور النص الجديد
+                setTimeout(() => {
+                    contentBlock.classList.remove('changing');
+                }, 350);
+            },
+
+            updateVideo(videoSrc, isInitial) {
+                const layer1 = document.getElementById('video-layer-1');
+                const layer2 = document.getElementById('video-layer-2');
+                
+                let currentLayer, nextLayer;
+                
+                if (this.activeLayer === 1) {
+                    currentLayer = layer1;
+                    nextLayer = layer2;
+                    this.activeLayer = 2;
+                } else {
+                    currentLayer = layer2;
+                    nextLayer = layer1;
+                    this.activeLayer = 1;
+                }
+
+                nextLayer.src = videoSrc;
+                nextLayer.load();
+                
+                nextLayer.muted = true;
+                nextLayer.volume = 0;
+
+                let playPromise = nextLayer.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // مزج سلس خفيف على كرت الشاشة
+                        if (!isInitial) {
+                            currentLayer.classList.remove('active');
+                            nextLayer.classList.add('active');
+                        } else {
+                            nextLayer.classList.add('active');
+                        }
+                    }).catch(error => {
+                        if (!isInitial) {
+                            currentLayer.classList.remove('active');
+                            nextLayer.classList.add('active');
+                        } else {
+                            nextLayer.classList.add('active');
+                        }
+                    });
+                }
+            },
+
+            startAutoCycle() {
+                this.resetAutoCycle();
+            },
+
+            resetAutoCycle() {
+                clearTimeout(this.cycleTimeout);
+                
+                const currentWorld = this.worlds[this.worldKeys[this.currentIndex]];
+                const duration = currentWorld.duration;
+                
+                const progressBar = document.getElementById('cycle-progress');
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+                
+                setTimeout(() => {
+                    progressBar.style.transition = `width ${duration / 1000}s linear`;
+                    progressBar.style.width = '100%';
+                }, 50);
+
+                this.cycleTimeout = setTimeout(() => {
+                    this.nextWorld();
+                }, duration);
+            },
+
+            nextWorld() {
+                this.currentIndex = (this.currentIndex + 1) % this.worldKeys.length;
+                const nextWorldId = this.worldKeys[this.currentIndex];
+                this.switchWorld(nextWorldId);
+                this.resetAutoCycle();
+            }
+        };
+
+        window.addEventListener('load', () => {
+            QissaEngine.init();
+            QissaEngine.startAutoCycle();
+        });
+    </script>
+</body>
+</html>
